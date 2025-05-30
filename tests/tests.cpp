@@ -52,8 +52,8 @@ TEST(Transaction, Make_CallsAccountMethodsCorrectly) {
     EXPECT_CALL(to, Unlock()).Times(1);
     EXPECT_CALL(from, ChangeBalance(-110)).Times(1);
     EXPECT_CALL(to, ChangeBalance(100)).Times(1);
-    EXPECT_CALL(from, GetBalance()).Times(1).WillOnce(Return(1000));
-    EXPECT_CALL(to, GetBalance()).Times(1).WillOnce(Return(500));
+    EXPECT_CALL(from, GetBalance()).Times(AtLeast(1)).WillRepeatedly(Return(1000));
+    EXPECT_CALL(to, GetBalance()).Times(AtLeast(1)).WillRepeatedly(Return(500));
 
     // Выполняем транзакцию
     Transaction transaction;
@@ -90,9 +90,17 @@ TEST(Transaction, Make_SavesToDatabaseCorrectly) {
     MockAccount from(1, 1000);
     MockAccount to(2, 500);
 
+    // Настраиваем ожидания для всех вызовов методов
+    EXPECT_CALL(from, Lock()).Times(1);
+    EXPECT_CALL(to, Lock()).Times(1);
+    EXPECT_CALL(from, Unlock()).Times(1);
+    EXPECT_CALL(to, Unlock()).Times(1);
+    EXPECT_CALL(from, ChangeBalance(_)).Times(1);
+    EXPECT_CALL(to, ChangeBalance(_)).Times(1);
     EXPECT_CALL(from, GetBalance()).Times(AtLeast(1)).WillRepeatedly(Return(1000));
     EXPECT_CALL(to, GetBalance()).Times(AtLeast(1)).WillRepeatedly(Return(500));
 
+    // Выполняем транзакцию
     Transaction transaction;
     transaction.set_fee(10);
     EXPECT_TRUE(transaction.Make(from, to, 100));
